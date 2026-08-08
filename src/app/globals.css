@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050607;
+  --foreground: #f2f0ea;
+  /*
+   * Sampled directly from the NestGen mark's three cube faces (see
+   * NestGenLogo.tsx) rather than invented: orange = industrial/physical act,
+   * blue = public-safety act, purple = the mark's dominant top face, used for
+   * persistent chrome and the brand reveal. --accent is the orange, since
+   * Act I (SQM) is the default/most frequent narrative color.
+   */
+  --accent: #e8551f;
+  --accent-dim: #7a3a1f;
+  --accent-blue: #2f6bff;
+  --accent-purple: #9b3fe8;
+  --line: rgba(242, 240, 234, 0.14);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-purple: var(--accent-purple);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-archivo);
+}
+
+html {
+  background: var(--background);
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--accent-purple);
+  color: #050607;
+}
+
+/*
+ * Visible against the fully black stage: the browser's default focus ring can
+ * read as too faint here, so it's reinforced explicitly for every keyboard
+ * user rather than left to differ by browser default.
+ */
+:focus-visible {
+  outline: 2px solid var(--accent-purple);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-label {
+  font-family: var(--font-mono);
+  letter-spacing: 0.22em;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Slow outward ring marking the destination the camera is about to travel to. */
+@keyframes softPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  animation: softPulse 3s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+
+/* The "keep scrolling" cue at the very start of the journey. */
+@keyframes scrollCue {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.scroll-cue {
+  animation: scrollCue 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring {
+    animation: none;
+    opacity: 0.4;
+  }
+
+  .scroll-cue {
+    animation: none;
+    opacity: 0.4;
+  }
+}
