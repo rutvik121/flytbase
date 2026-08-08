@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nestgen-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "nestgen-app", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}
