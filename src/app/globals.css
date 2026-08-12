@@ -12,8 +12,21 @@
    */
   --accent: #e8551f;
   --accent-dim: #7a3a1f;
-  --accent-blue: #2f6bff;
-  --accent-purple: #9b3fe8;
+  --accent-blue: #4d82ff;
+  /*
+   * Two purples, because one cannot do both jobs at WCAG AA on this
+   * background. Measured against --background (#050607):
+   *   --accent-purple       #ab6ff0  6.05:1  — purple TEXT and hover states
+   *   --accent-purple-deep  #6608b5  8.30:1 against #f5f2ee — purple SURFACES
+   * The mid purple this replaced (#9b3fe8) sat at 4.12:1 as text and 4.41:1
+   * as a button fill, i.e. below the 4.5:1 needed for the small uppercase
+   * labels it was used on. --accent-purple-deep is sampled from the mark's
+   * own darker purple face, so the brand relationship is preserved.
+   * --accent-blue was likewise lifted from #2f6bff (4.51:1, effectively on
+   * the line) to #4d82ff (5.75:1) to leave real headroom.
+   */
+  --accent-purple: #ab6ff0;
+  --accent-purple-deep: #6608b5;
   --line: rgba(242, 240, 234, 0.14);
 }
 
@@ -23,6 +36,7 @@
   --color-accent: var(--accent);
   --color-accent-blue: var(--accent-blue);
   --color-accent-purple: var(--accent-purple);
+  --color-accent-purple-deep: var(--accent-purple-deep);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-archivo);
@@ -54,6 +68,47 @@ body {
   outline: 2px solid var(--accent-purple);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+/*
+ * Skip link: hidden until it receives focus, then shown.
+ *
+ * It must NOT live inside a .sr-only container — that container is clipped with
+ * clip-path, which clips descendants even when they are position:fixed, so a
+ * focusable child of .sr-only can never reveal itself. This element therefore
+ * carries its own hiding and does its own reveal (WCAG 2.4.1 / 2.4.7 / 2.4.11).
+ */
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border-width: 0;
+  clip-path: inset(50%);
+}
+
+.skip-link:focus-visible {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.75rem 1.5rem;
+  overflow: visible;
+  clip-path: none;
+  border-radius: 9999px;
+  background: var(--accent-purple-deep);
+  color: #f5f2ee;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  z-index: 100;
 }
 
 .font-display {
