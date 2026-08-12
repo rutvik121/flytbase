@@ -92,6 +92,13 @@ const CLIPS: Clip[] = [
 const PRELOAD_LEAD = 45;
 
 /**
+ * Under prefers-reduced-motion every clip parks on this fraction of its own
+ * duration instead of being scrubbed. Mid-clip rather than frame 0: the first
+ * frame of a continuing shot is the least representative one.
+ */
+const REDUCED_MOTION_FRAME = 0.5;
+
+/**
  * Where the seep sits in the SQM clip's *settled* frame, as a percentage of the
  * video's own 16:9 content box — not the viewport.
  */
@@ -367,7 +374,10 @@ export default function SqmCinematic() {
                   );
                   frac = 1 - back;
                 }
-                scrubbers[i].state.frac = frac;
+                // Under prefers-reduced-motion the camera never flies: each clip
+                // is pinned to a representative still and the journey becomes a
+                // cross-faded sequence of frames instead of continuous motion.
+                scrubbers[i].state.frac = reduced ? REDUCED_MOTION_FRAME : frac;
 
                 if (!requested[i] && unit > (clip.fadeFrom ?? 0) - PRELOAD_LEAD) {
                   requested[i] = true;
@@ -453,8 +463,9 @@ export default function SqmCinematic() {
         const dimmed = locs.filter((_, i) => !LOCATIONS[i].destination);
         tl.to(dimmed, { opacity: 0.18, duration: 5 }, BEAT.othersDim);
         tl.to(ringRef.current, { opacity: 1, duration: 5 }, BEAT.activate);
-        // literal rather than var(--accent-blue): GSAP can't interpolate a CSS var
-        tl.to(destLabelRef.current, { color: "#2f6bff", duration: 5 }, BEAT.activate);
+        // literal rather than var(--accent-blue): GSAP can't interpolate a CSS
+        // var. Must be kept in sync with --accent-blue in globals.css.
+        tl.to(destLabelRef.current, { color: "#4d82ff", duration: 5 }, BEAT.activate);
         tl.to(locs, { opacity: 0, duration: 6 }, BEAT.locationsOut);
         tl.to(ringRef.current, { opacity: 0, duration: 6 }, BEAT.locationsOut);
 
@@ -598,8 +609,24 @@ export default function SqmCinematic() {
       className="relative"
       style={{ height: `${TOTAL_UNITS * UNIT_VH + 100}vh` }}
     >
-      {/* orientation anchor, not a navbar */}
-      <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-6 py-4 md:px-10 md:py-6 lg:px-16">
+      {/*
+        First focusable thing on the page. The journey is ~3,400vh of pinned
+        scroll, so a keyboard user needs a way to reach the one action that
+        matters without traversing all of it.
+      */}
+      <a href="#register" onClick={scrollToRegister} className="skip-link">
+        Skip to registration
+      </a>
+
+      {/*
+        Orientation anchor, not a navbar. role="banner" is explicit because this
+        <header> renders inside <main> (page.tsx), and a header scoped to main
+        does not expose the banner landmark on its own.
+      */}
+      <header
+        role="banner"
+        className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-6 py-4 md:px-10 md:py-6 lg:px-16"
+      >
         {/* brand anchor — returns to the start of the journey */}
         <a
           href="#top"
@@ -618,13 +645,15 @@ export default function SqmCinematic() {
         </a>
 
         {/* in-page navigation: jumps straight into the timeline at each act */}
-        <nav aria-label="Story sections" className="hidden items-center gap-6 md:flex">
+        <nav aria-label="Story sections" className="hidden items-center gap-5 md:flex">
           {SECTIONS.map((s) => (
+            // px/py are not decoration: they carry the hit target to the 24x24
+            // CSS px minimum (WCAG 2.2 2.5.8). Bare 9px text is ~11px tall.
             <button
               key={s.label}
               type="button"
               onClick={() => scrollToUnit(s.unit)}
-              className="font-mono-label text-[9px] uppercase text-foreground/60 transition-colors hover:text-accent-purple md:text-[10px]"
+              className="font-mono-label px-1 py-2 text-[9px] uppercase text-foreground/60 transition-colors hover:text-accent-purple md:text-[10px]"
             >
               {s.label}
             </button>
@@ -687,11 +716,13 @@ export default function SqmCinematic() {
           The future isn&apos;t something to watch. It&apos;s something to
           build. See how the people already doing it made it work.
         </p>
-        <p>
-          <a href="#register" onClick={scrollToRegister}>
-            Register for NestGen &rsquo;26
-          </a>
-        </p>
+        {/*
+          Deliberately plain text, not a link: anything focusable in here is
+          invisible to a sighted keyboard user and cannot reveal itself, because
+          .sr-only clips its descendants. The reachable equivalents are the skip
+          link at the top of the page and the Register link in the header.
+        */}
+        <p>Registration for NestGen &rsquo;26 is open.</p>
       </div>
 
       <section
@@ -718,7 +749,13 @@ export default function SqmCinematic() {
           />
         ))}
 
-        <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-black/65 via-transparent to-black/75" />
+        {/*
+          The mid-band used to be fully transparent, but most copy sits between
+          26% and 58% — i.e. exactly there — so text contrast depended entirely
+          on whatever the video happened to be showing. A floor of black/35
+          keeps a predictable minimum behind the copy (WCAG 1.4.3).
+        */}
+        <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-b from-black/70 via-black/35 to-black/80" />
         <div ref={scrimRef} className="pointer-events-none absolute inset-0 z-20 bg-black opacity-0" />
         <div
           ref={vignetteRef}
@@ -1145,7 +1182,7 @@ export default function SqmCinematic() {
           <a
             href="#register"
             tabIndex={-1}
-            className="font-mono-label inline-flex items-center gap-3 rounded-full bg-accent-purple px-8 py-4 text-[11px] uppercase text-[#f5f2ee] transition-transform hover:scale-[1.02] md:text-xs"
+            className="font-mono-label inline-flex items-center gap-3 rounded-full bg-accent-purple-deep px-8 py-4 text-[11px] uppercase text-[#f5f2ee] transition-transform hover:scale-[1.02] md:text-xs"
           >
             Register for NestGen &rsquo;26 <span aria-hidden="true">&rarr;</span>
           </a>
